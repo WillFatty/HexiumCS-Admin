@@ -1,0 +1,12 @@
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\bin\Release\addons\counterstrikesharp\plugins\HexiumCS-Admin\HexiumCS-Admin.deps.json
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\bin\Release\addons\counterstrikesharp\plugins\HexiumCS-Admin\HexiumCS-Admin.dll
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\bin\Release\addons\counterstrikesharp\plugins\HexiumCS-Admin\HexiumCS-Admin.pdb
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.csproj.AssemblyReference.cache
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.GeneratedMSBuildEditorConfig.editorconfig
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.AssemblyInfoInputs.cache
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.AssemblyInfo.cs
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.csproj.CoreCompileInputs.cache
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.dll
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\refint\HexiumCS-Admin.dll
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.pdb
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\ref\HexiumCS-Admin.dll

@@ -32,6 +32,7 @@ internal static class DemoRecorder
         plugin.RegisterListener<Listeners.OnMapStart>(OnMapStart);
         plugin.RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
         plugin.RegisterListener<Listeners.OnServerHibernationUpdate>(OnHibernationUpdate);
+        RecordingIndicator.Initialize(plugin);
 
         // Hot reload / late load mid-map: the OnMapStart listener may have
         // already fired, so retry once the map name is available.
@@ -59,6 +60,57 @@ internal static class DemoRecorder
 
     public static void SetConfig(AdminConfig config) => _config = config;
 
+    /// <summary>True while a tv_record demo is being captured.</summary>
+    public static bool IsRecording => _recording;
+
+    /// <summary>
+    /// Manual toggle for the !record admin command. Returns the new recording
+    /// state, or null when demo recording is not enabled on this server.
+    /// </summary>
+    public static bool? ToggleRecording()
+    {
+        if (!ApiConfigured)
+            return null;
+
+        if (_recording)
+        {
+            StopAndScheduleFinalize();
+            return false;
+        }
+
+        StartRecording();
+        return _recording;
+    }
+
+    /// <summary>
+    /// Starts recording if not already recording. Returns the recording state,
+    /// or null when demo recording is not enabled on this server.
+    /// </summary>
+    public static bool? StartRecordingNow()
+    {
+        if (!ApiConfigured)
+            return null;
+
+        if (_recording)
+            return true;
+
+        StartRecording();
+        return _recording;
+    }
+
+    /// <summary>
+    /// Stops the active recording (if any) and schedules finalize/upload.
+    /// Returns true when a recording was actually stopped.
+    /// </summary>
+    public static bool StopRecording()
+    {
+        if (!_recording)
+            return false;
+
+        StopAndScheduleFinalize();
+        return true;
+    }
+
     public static void Shutdown()
     {
         if (_plugin is not null)
@@ -69,12 +121,20 @@ internal static class DemoRecorder
         }
 
         StopAndScheduleFinalize();
+        RecordingIndicator.Shutdown();
 
         _plugin = null;
     }
 
-    private static bool Enabled =>
-        _config.DemoRecordingEnabled &&
+    /// <summary>Auto-recording gate: config flag plus InventorySim credentials.</summary>
+    private static bool Enabled => _config.DemoRecordingEnabled && ApiConfigured;
+
+    /// <summary>
+    /// Manual commands (!record / !admin) only need InventorySim credentials —
+    /// DemoRecordingEnabled gates the automatic per-match recording, not admin
+    /// overrides.
+    /// </summary>
+    private static bool ApiConfigured =>
         !string.IsNullOrWhiteSpace(_config.ApiBaseUrl) &&
         !string.IsNullOrWhiteSpace(_config.ApiKey);
 
@@ -135,6 +195,7 @@ internal static class DemoRecorder
             return;
 
         _recording = false;
+        RecordingIndicator.SetRecording(false);
         var match = (ChatLogger.CurrentMatchId, _mapName, _config.ServerName);
         var prefix = _demoPrefix;
         var csgoDir = _csgoDir;
@@ -147,7 +208,7 @@ internal static class DemoRecorder
 
     private static void StartRecording()
     {
-        if (!Enabled || _recording)
+        if (!ApiConfigured || _recording)
             return;
 
         try
@@ -186,6 +247,7 @@ internal static class DemoRecorder
             Server.ExecuteCommand("tv_record_immediate 1");
         Server.ExecuteCommand($"tv_record {_demoPrefix}");
         _recording = true;
+        RecordingIndicator.SetRecording(true);
         Server.PrintToConsole(
             $"[HexiumCS-Admin] Recording match demo {_demoPrefix}.dem on {map}.");
         _ = AppendUploadLogAsync(_csgoDir,
@@ -414,7 +476,7 @@ internal static class DemoRecorder
     /// </summary>
     private static async Task RetryPendingUploadsAsync(string csgoDir)
     {
-        if (!Enabled || string.IsNullOrWhiteSpace(csgoDir))
+        if (!ApiConfigured || string.IsNullOrWhiteSpace(csgoDir))
             return;
 
         string[] sidecars;

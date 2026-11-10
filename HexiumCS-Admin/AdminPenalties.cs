@@ -215,8 +215,6 @@ internal static class AdminPenalties
             ReplaceCache(Bans, snapshot.Bans);
             ReplaceCache(Mutes, snapshot.Mutes);
             ReplaceCache(Gags, snapshot.Gags);
-            Server.PrintToConsole(
-                $"[HexiumCS-Admin] Synced {Bans.Count} ban(s), {Mutes.Count} mute(s), {Gags.Count} gag(s).");
             EnforceOnlinePlayers();
         });
     }

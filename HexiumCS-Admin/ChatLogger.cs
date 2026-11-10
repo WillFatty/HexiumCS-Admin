@@ -161,20 +161,16 @@ internal static class ChatLogger
         // main thread before touching natives or the shared queue.
         Server.NextFrame(() =>
         {
-            if (ok)
+            if (!ok)
             {
                 Server.PrintToConsole(
-                    $"[HexiumCS-Admin] Sent {batch.Count} chat message(s) for match {matchId}.");
-                return;
-            }
-
-            Server.PrintToConsole(
-                $"[HexiumCS-Admin] Chat log flush failed ({batch.Count} messages re-queued).");
-            foreach (var entry in batch)
-            {
-                if (Pending.Count >= MaxQueueSize)
-                    break;
-                Pending.Enqueue(entry);
+                    $"[HexiumCS-Admin] Chat log flush failed ({batch.Count} messages re-queued).");
+                foreach (var entry in batch)
+                {
+                    if (Pending.Count >= MaxQueueSize)
+                        break;
+                    Pending.Enqueue(entry);
+                }
             }
         });
     }

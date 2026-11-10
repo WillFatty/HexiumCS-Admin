@@ -10,9 +10,11 @@ internal enum AdminAction
 {
     Ban,
     CallAdmin,
+    Gag,
     Kick,
     Mute,
-    Gag,
+    RecordStart,
+    RecordStop,
 }
 
 internal sealed record AdminPlayerEntry(ulong SteamId, int Slot, string Name);
@@ -196,6 +198,8 @@ internal static class AdminMenu
         TryAddAction(player, state, AdminAction.Kick, "Kick", "Remove a player from this server", "@css/kick");
         TryAddAction(player, state, AdminAction.Mute, "Mute", "Block voice chat", "@css/chat");
         TryAddAction(player, state, AdminAction.Gag, "Gag", "Block text chat", "@css/chat");
+        TryAddAction(player, state, AdminAction.RecordStart, "Start Recording", "Begin capturing the match demo", "@css/generic");
+        TryAddAction(player, state, AdminAction.RecordStop, "Stop Recording", "End capture and upload the demo", "@css/generic");
     }
 
     private static void TryAddAction(
@@ -232,6 +236,7 @@ internal static class AdminMenu
 
     private static IReadOnlyList<AdminDurationOption> GetDurations(MenuState state)
         => state.Action is null or AdminAction.Kick or AdminAction.CallAdmin
+            or AdminAction.RecordStart or AdminAction.RecordStop
             ? []
             : _config.Durations;
 
@@ -252,6 +257,8 @@ internal static class AdminMenu
         AdminAction.Kick => "Kick",
         AdminAction.Mute => "Mute",
         AdminAction.Gag => "Gag",
+        AdminAction.RecordStart => "Start recording",
+        AdminAction.RecordStop => "Stop recording",
         _ => "Admin",
     };
 
@@ -412,6 +419,38 @@ internal static class AdminMenu
                 if (!AdminManager.PlayerHasPermissions(player, selected.Permission))
                 {
                     player.PrintToChat($"{ChatColors.Red}[Admin] You do not have permission for that.");
+                    return;
+                }
+
+                // Recording toggles run immediately — no player/duration/reason steps.
+                if (selected.Action is AdminAction.RecordStart or AdminAction.RecordStop)
+                {
+                    if (selected.Action == AdminAction.RecordStart)
+                    {
+                        if (DemoRecorder.IsRecording)
+                        {
+                            AdminPlugin.NotifyResult(player, "Already recording.");
+                        }
+                        else
+                        {
+                            var started = DemoRecorder.StartRecordingNow();
+                            AdminPlugin.NotifyResult(player, started switch
+                            {
+                                null => "Demo recording is not enabled on this server.",
+                                true => "Recording match demo.",
+                                _ => "Failed to start recording (tv_enable may be false; check server console).",
+                            });
+                        }
+                    }
+                    else
+                    {
+                        AdminPlugin.NotifyResult(player,
+                            DemoRecorder.StopRecording()
+                                ? "Recording stopped."
+                                : "No recording in progress.");
+                    }
+
+                    Render(player, _hud);
                     return;
                 }
 

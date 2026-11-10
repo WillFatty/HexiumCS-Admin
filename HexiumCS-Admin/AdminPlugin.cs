@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Utils;
+using HexiumCSUI;
 
 namespace HexiumCSAdmin;
 
@@ -87,6 +88,21 @@ public class AdminPlugin : BasePlugin, IPluginConfig<AdminConfig>
     public void OnGagCommand(CCSPlayerController? player, CommandInfo command)
         => TryOpen(player, AdminAction.Gag, "@css/chat");
 
+    [ConsoleCommand("css_record", "Toggle match demo recording (!record)")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    public void OnRecordCommand(CCSPlayerController? player, CommandInfo command)
+        => TryToggleRecord(player);
+
+    [ConsoleCommand("css_stoprecording", "Stop match demo recording (!stoprecording)")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    public void OnStopRecordingCommand(CCSPlayerController? player, CommandInfo command)
+        => TryStopRecord(player);
+
+    [ConsoleCommand("css_recdebug", "Print raw button states (!recdebug)")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    public void OnRecDebugCommand(CCSPlayerController? player, CommandInfo command)
+        => TryRecDebug(player);
+
     [GameEventHandler]
     public HookResult OnPlayerChat(EventPlayerChat @event, GameEventInfo info)
     {
@@ -110,6 +126,10 @@ public class AdminPlugin : BasePlugin, IPluginConfig<AdminConfig>
             TryOpenCallAdmin(player);
             return HookResult.Handled;
         }
+
+        // !record / !stop / !recdebug are handled by the css_* console commands
+        // below — CSS auto-dispatches !chat to css_ commands, so intercepting
+        // them here as well would run the handler twice (toggle = start+stop).
 
         AdminAction? action = text switch
         {
@@ -187,6 +207,90 @@ public class AdminPlugin : BasePlugin, IPluginConfig<AdminConfig>
         }
 
         AdminMenu.Open(player, AdminAction.CallAdmin);
+    }
+
+    /// <summary>
+    /// Sends command feedback as a HexiumCS-UI panorama notification when the
+    /// UI plugin is loaded, falling back to chat otherwise. Message may use
+    /// {color} tags (e.g. {green}, {red}).
+    /// </summary>
+    internal static void NotifyResult(CCSPlayerController player, string message)
+    {
+        if (HexiumUI.IsInitialized)
+        {
+            HexiumUI.ShowNotification(player, "Admin", message, 5);
+            return;
+        }
+
+        player.PrintToChat($"{ChatColors.Grey}[Admin]{ChatColors.Default} {message}");
+    }
+
+    private void TryRecDebug(CCSPlayerController? player)
+    {
+        if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
+            return;
+
+        if (!AdminManager.PlayerHasPermissions(player, "@css/generic"))
+        {
+            player.PrintToChat($"{ChatColors.Red}[Admin] You do not have permission for that.");
+            return;
+        }
+
+        NotifyResult(player, $"Buttons: {RecordingIndicator.DescribeButtons(player)}");
+    }
+
+    private void TryToggleRecord(CCSPlayerController? player)
+    {
+        if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
+            return;
+
+        if (!AdminManager.PlayerHasPermissions(player, "@css/generic"))
+        {
+            player.PrintToChat($"{ChatColors.Red}[Admin] You do not have permission for that.");
+            return;
+        }
+
+        var wasRecording = DemoRecorder.IsRecording;
+        var state = DemoRecorder.ToggleRecording();
+        if (state is null)
+        {
+            NotifyResult(player, "Demo recording is not enabled on this server.");
+            return;
+        }
+
+        if (state.Value)
+        {
+            NotifyResult(player, "Recording match demo.");
+        }
+        else if (wasRecording)
+        {
+            NotifyResult(player, "Recording stopped.");
+        }
+        else
+        {
+            NotifyResult(player, "Failed to start recording (tv_enable may be false; check server console).");
+        }
+    }
+
+    private void TryStopRecord(CCSPlayerController? player)
+    {
+        if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
+            return;
+
+        if (!AdminManager.PlayerHasPermissions(player, "@css/generic"))
+        {
+            player.PrintToChat($"{ChatColors.Red}[Admin] You do not have permission for that.");
+            return;
+        }
+
+        if (DemoRecorder.StopRecording())
+        {
+            NotifyResult(player, "Recording stopped.");
+        }
+        else
+        {
+            NotifyResult(player, "No recording in progress.");
+        }
     }
 
     private void TryOpen(CCSPlayerController? player, AdminAction action, string permission)

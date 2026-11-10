@@ -19,4 +19,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- Resolved from counterstrikesharp/shared at runtime; not copied locally. -->
+  <ItemGroup>
+    <Reference Include="HexiumCS-UI">
+      <HintPath>..\..\HexiumCS-UI\HexiumCS-UI\bin\$(Configuration)\addons\counterstrikesharp\shared\HexiumCS-UI\HexiumCS-UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
 </Project>

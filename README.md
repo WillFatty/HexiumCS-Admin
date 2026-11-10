@@ -27,11 +27,16 @@ Edit `addons/counterstrikesharp/configs/plugins/HexiumCS-Admin/HexiumCS-Admin.js
   "ApiBaseUrl": "https://your-inventorysim.example",
   "ApiKey": "<api credential with admin scope>",
   "ServerName": "EU West #1",
-  "PenaltySyncIntervalSeconds": 5
+  "PenaltySyncIntervalSeconds": 5,
+  "DemoRecordingEnabled": true
 }
 ```
 
-On InventorySim, run the Prisma migration so `CallAdminBan` / `AdminCommPenalty` exist, then grant the credential the `admin` scope from `/admin`.
+On InventorySim, run the Prisma migration so `CallAdminBan` / `AdminCommPenalty` / `AdminDemo` exist, then grant the credential the `admin` scope from `/admin`.
+
+## Match demos
+
+When `DemoRecordingEnabled` is true (and `ApiBaseUrl` / `ApiKey` are set), the plugin records a server-side demo via `tv_record` for the whole match — requires `tv_enable 1`. On map end the `.dem` file (written under `game/csgo/hexadmin/`) is uploaded to `POST /api/admin/demos` on InventorySim with the same match ID used by `!calladmin` tickets and chat logs, then deleted locally. Failed uploads keep the file on disk. Demos can be downloaded by admins from `/admin` → Demos.
 
 ## Commands
 

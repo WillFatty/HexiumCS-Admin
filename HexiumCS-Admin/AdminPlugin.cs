@@ -34,6 +34,7 @@ public class AdminPlugin : BasePlugin, IPluginConfig<AdminConfig>
         AdminMenu.SetConfig(config);
         AdminPenalties.SetConfig(config);
         ChatLogger.SetConfig(config);
+        DemoRecorder.SetConfig(config);
     }
 
     public override void Load(bool hotReload)
@@ -41,10 +42,12 @@ public class AdminPlugin : BasePlugin, IPluginConfig<AdminConfig>
         AdminMenu.Initialize(this, Config, OnActionRequestedAsync);
         AdminPenalties.Initialize(this, Config);
         ChatLogger.Initialize(this, Config);
+        DemoRecorder.Initialize(this, Config);
     }
 
     public override void Unload(bool hotReload)
     {
+        DemoRecorder.Shutdown();
         ChatLogger.Shutdown();
         AdminPenalties.Shutdown();
         AdminMenu.Shutdown();

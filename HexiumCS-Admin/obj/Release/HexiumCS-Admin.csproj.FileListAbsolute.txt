@@ -10,3 +10,4 @@ D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.dll
 D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\refint\HexiumCS-Admin.dll
 D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.pdb
 D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\ref\HexiumCS-Admin.dll
+D:\Code\HexiumCS-Admin\HexiumCS-Admin\obj\Release\HexiumCS-Admin.sourcelink.json

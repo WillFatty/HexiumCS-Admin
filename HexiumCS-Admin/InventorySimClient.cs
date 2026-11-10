@@ -7,6 +7,7 @@ namespace HexiumCSAdmin;
 internal static class InventorySimClient
 {
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient UploadHttp = new() { Timeout = TimeSpan.FromMinutes(30) };
 
     public sealed record CreateResult(bool Success, string? Id, string? Error);
 
@@ -139,6 +140,49 @@ internal static class InventorySimClient
         catch
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Uploads a recorded .dem file (raw body) tagged with the match ID shared
+    /// by call-admin tickets and chat logs.
+    /// </summary>
+    public static async Task<CreateResult> UploadDemoAsync(
+        string apiBaseUrl,
+        string apiKey,
+        string serverName,
+        string matchId,
+        string map,
+        string filename,
+        string filePath)
+    {
+        try
+        {
+            var query = string.Join("&",
+                $"apiKey={Uri.EscapeDataString(apiKey)}",
+                $"serverName={Uri.EscapeDataString(serverName)}",
+                $"matchId={Uri.EscapeDataString(matchId)}",
+                $"map={Uri.EscapeDataString(map)}",
+                $"filename={Uri.EscapeDataString(filename)}");
+            var url = apiBaseUrl.TrimEnd('/') + "/api/admin/demos?" + query;
+
+            using var fileStream = File.OpenRead(filePath);
+            using var content = new StreamContent(fileStream);
+            content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            using var response = await UploadHttp.PostAsync(url, content);
+
+            if (!response.IsSuccessStatusCode)
+                return new CreateResult(false, null, $"HTTP {(int)response.StatusCode}");
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var id = doc.RootElement.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+            return new CreateResult(true, id, null);
+        }
+        catch (Exception ex)
+        {
+            return new CreateResult(false, null, ex.Message);
         }
     }
 

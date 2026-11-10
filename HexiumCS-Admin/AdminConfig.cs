@@ -37,6 +37,14 @@ public class AdminConfig : BasePluginConfig
     [JsonPropertyName("ServerName")]
     public string ServerName { get; set; } = "";
 
+    /// <summary>
+    /// Records a tv_record demo for each match and uploads it to InventorySim
+    /// on map end, tagged with the chat-log / call-admin match ID. Requires
+    /// ApiBaseUrl + ApiKey and tv_enable 1 on the server.
+    /// </summary>
+    [JsonPropertyName("DemoRecordingEnabled")]
+    public bool DemoRecordingEnabled { get; set; } = true;
+
     [JsonPropertyName("PenaltySyncIntervalSeconds")]
     public int PenaltySyncIntervalSeconds { get; set; } = 5;
 

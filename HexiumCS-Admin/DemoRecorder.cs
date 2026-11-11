@@ -2,6 +2,8 @@ using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Timers;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace HexiumCSAdmin;
 
@@ -15,6 +17,7 @@ internal static class DemoRecorder
     private const int MaxFinalizeSeconds = 120;
     private const long MinDemoBytes = 100 * 1024;
     private const string SidecarSuffix = ".hexadmin.json";
+    private const float PendingUploadRetrySeconds = 300f;
 
     private static BasePlugin? _plugin;
     private static AdminConfig _config = new();
@@ -24,6 +27,8 @@ internal static class DemoRecorder
     private static DateTime _recordStartedUtc;
     private static string _mapName = "";
     private static int _startToken;
+    private static Timer? _retryTimer;
+    private static int _retryInFlight;
 
     public static void Initialize(BasePlugin plugin, AdminConfig config)
     {
@@ -40,9 +45,14 @@ internal static class DemoRecorder
 
         // Retry demos whose upload failed on a previous map / plugin load.
         var csgoDir = ResolveCsgoDir(Server.GameDirectory);
-        _ = RetryPendingUploadsAsync(csgoDir);
+        _ = RetryPendingSafeAsync();
         _ = AppendUploadLogAsync(csgoDir,
             $"{DateTime.UtcNow:O} plugin initialized dir={csgoDir}");
+
+        // Keep retrying pending uploads while the server runs so a site
+        // outage doesn't have to wait for the next map change to recover.
+        _retryTimer = plugin.AddTimer(PendingUploadRetrySeconds,
+            () => _ = RetryPendingSafeAsync(), TimerFlags.REPEAT);
     }
 
     /// <summary>
@@ -120,6 +130,9 @@ internal static class DemoRecorder
             _plugin.RemoveListener<Listeners.OnServerHibernationUpdate>(OnHibernationUpdate);
         }
 
+        _retryTimer?.Kill();
+        _retryTimer = null;
+
         StopAndScheduleFinalize();
         RecordingIndicator.Shutdown();
 
@@ -146,7 +159,7 @@ internal static class DemoRecorder
         _demoPrefix = "";
         _csgoDir = "";
         ScheduleStartRecording();
-        _ = RetryPendingUploadsAsync(ResolveCsgoDir(Server.GameDirectory));
+        _ = RetryPendingSafeAsync();
     }
 
     private static void OnMapEnd() => StopAndScheduleFinalize();
@@ -466,6 +479,25 @@ internal static class DemoRecorder
         catch
         {
             // Without the sidecar the file is simply orphaned on disk.
+        }
+    }
+
+    /// <summary>
+    /// Runs <see cref="RetryPendingUploadsAsync"/> at most once at a time —
+    /// the map-start hook and the periodic timer can overlap.
+    /// </summary>
+    private static async Task RetryPendingSafeAsync()
+    {
+        if (Interlocked.Exchange(ref _retryInFlight, 1) == 1)
+            return;
+
+        try
+        {
+            await RetryPendingUploadsAsync(ResolveCsgoDir(Server.GameDirectory));
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _retryInFlight, 0);
         }
     }
 

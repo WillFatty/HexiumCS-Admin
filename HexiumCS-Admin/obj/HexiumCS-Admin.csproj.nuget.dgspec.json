@@ -1,25 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "/home/fatty/Code/HexiumCS-Admin/HexiumCS-Admin/HexiumCS-Admin.csproj": {}
+    "D:\\Code\\HexiumCS-Admin\\HexiumCS-Admin\\HexiumCS-Admin.csproj": {}
   },
   "projects": {
-    "/home/fatty/Code/HexiumCS-Admin/HexiumCS-Admin/HexiumCS-Admin.csproj": {
+    "D:\\Code\\HexiumCS-Admin\\HexiumCS-Admin\\HexiumCS-Admin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/fatty/Code/HexiumCS-Admin/HexiumCS-Admin/HexiumCS-Admin.csproj",
+        "projectUniqueName": "D:\\Code\\HexiumCS-Admin\\HexiumCS-Admin\\HexiumCS-Admin.csproj",
         "projectName": "HexiumCS-Admin",
-        "projectPath": "/home/fatty/Code/HexiumCS-Admin/HexiumCS-Admin/HexiumCS-Admin.csproj",
-        "packagesPath": "/home/fatty/.nuget/packages/",
-        "outputPath": "/home/fatty/Code/HexiumCS-Admin/HexiumCS-Admin/obj/",
+        "projectPath": "D:\\Code\\HexiumCS-Admin\\HexiumCS-Admin\\HexiumCS-Admin.csproj",
+        "packagesPath": "C:\\Users\\FattyGaming\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\HexiumCS-Admin\\HexiumCS-Admin\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/fatty/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\FattyGaming\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -69,7 +71,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/fatty/.dotnet/sdk/10.0.404/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

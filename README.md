@@ -7,7 +7,7 @@ Bans, mutes, and gags are stored on InventorySim and synced to every server runn
 ## Requirements
 
 - CounterStrikeSharp
-- The `hexiumcs_ui` Panorama addon (reuses `hexium_calladmin` layout)
+- The `hexiumcs_ui` Panorama addon (uses the `hexium_admin` layout styled like `!help`)
 - An InventorySim `ApiCredential` whose `scope` includes `admin`
 - CSS admin permissions:
   - `@css/ban` → `!ban`

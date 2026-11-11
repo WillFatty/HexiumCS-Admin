@@ -22,20 +22,19 @@ internal sealed record AdminPlayerEntry(ulong SteamId, int Slot, string Name);
 internal sealed record AdminActionRow(AdminAction Action, string Name, string Description, string Permission);
 
 /// <summary>
-/// Multi-step Panorama admin menu (reuses hexium_calladmin layout):
+/// Multi-step Panorama admin menu styled after the HexiumCS-UI help menu:
 /// !admin → action → player → duration (ban/mute/gag) → reason → execute.
 /// Direct !ban/!kick/!mute/!gag skip the action step.
 /// </summary>
 internal static class AdminMenu
 {
-    public const string LayoutPath = "panorama/layout/custom_game/hexium_calladmin.vxml_c";
+    public const string LayoutPath = "panorama/layout/custom_game/hexium_admin.vxml_c";
     private const string EntityName = "hexium_admin_menu";
-    private const string RootPanelId = "CallAdminRoot";
+    private const string RootPanelId = "AdminRoot";
     private const string OpenClass = "open";
     private const string EmptyClass = "empty";
-    private const string HiddenClass = "hidden";
     private const string DisabledClass = "disabled";
-    private const int RowsPerPage = 10;
+    private const int RowsPerPage = 6;
 
     private enum Step
     {
@@ -297,13 +296,13 @@ internal static class AdminMenu
                 state.Target is null ? "Select a reason" : $"Reason for {state.Target.Name}"),
         };
 
-        hud.SetDialogVariableStringForPlayer(player, "ca_title", "ca_title", title);
-        hud.SetDialogVariableStringForPlayer(player, "ca_hint", "ca_hint", hint);
+        hud.SetDialogVariableStringForPlayer(player, "admin_title", "admin_title", title);
+        hud.SetDialogVariableStringForPlayer(player, "admin_hint", "admin_hint", hint);
 
         var start = state.Page * RowsPerPage;
         for (var i = 0; i < RowsPerPage; i++)
         {
-            var rowId = $"ca_row{i}";
+            var rowId = $"admin_row{i}";
             var index = start + i;
 
             if (index < count)
@@ -314,33 +313,33 @@ internal static class AdminMenu
                     case Step.Actions:
                     {
                         var entry = state.Actions[index];
-                        hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}", $"ca_row{i}", entry.Name);
+                        hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_label", $"admin_row{i}", entry.Name);
                         hud.SetDialogVariableStringForPlayer(
-                            player, $"ca_row{i}s", $"ca_row{i}s", entry.Description);
+                            player, $"admin_row{i}_desc", $"admin_row{i}d", entry.Description);
                         break;
                     }
                     case Step.Players:
                     {
                         var entry = state.Players[index];
-                        hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}", $"ca_row{i}", entry.Name);
+                        hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_label", $"admin_row{i}", entry.Name);
                         hud.SetDialogVariableStringForPlayer(
-                            player, $"ca_row{i}s", $"ca_row{i}s", $"SteamID: {entry.SteamId}");
+                            player, $"admin_row{i}_desc", $"admin_row{i}d", $"SteamID: {entry.SteamId}");
                         break;
                     }
                     case Step.Durations:
                     {
                         var duration = durations[index];
-                        hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}", $"ca_row{i}", duration.Name);
+                        hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_label", $"admin_row{i}", duration.Name);
                         hud.SetDialogVariableStringForPlayer(
-                            player, $"ca_row{i}s", $"ca_row{i}s", duration.Description);
+                            player, $"admin_row{i}_desc", $"admin_row{i}d", duration.Description);
                         break;
                     }
                     default:
                     {
                         var reason = reasons[index];
-                        hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}", $"ca_row{i}", reason.Name);
+                        hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_label", $"admin_row{i}", reason.Name);
                         hud.SetDialogVariableStringForPlayer(
-                            player, $"ca_row{i}s", $"ca_row{i}s", reason.Description);
+                            player, $"admin_row{i}_desc", $"admin_row{i}d", reason.Description);
                         break;
                     }
                 }
@@ -348,21 +347,19 @@ internal static class AdminMenu
             else
             {
                 hud.SetHasClassForPlayer(player, rowId, EmptyClass, true);
-                hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}", $"ca_row{i}", string.Empty);
-                hud.SetDialogVariableStringForPlayer(player, $"ca_row{i}s", $"ca_row{i}s", string.Empty);
+                hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_label", $"admin_row{i}", string.Empty);
+                hud.SetDialogVariableStringForPlayer(player, $"admin_row{i}_desc", $"admin_row{i}d", string.Empty);
             }
         }
 
-        var hasPrev = state.Page > 0;
+        var hasPrev = state.Page > 0 || CanGoBack(state);
         var hasNext = state.Page < pageCount - 1;
-        var showBack = state.Step != Step.Actions && (state.FromHub || state.Step != Step.Players);
-        hud.SetHasClassForPlayer(player, "ca_prev", DisabledClass, !hasPrev);
-        hud.SetHasClassForPlayer(player, "ca_next", DisabledClass, !hasNext);
-        hud.SetHasClassForPlayer(player, "ca_back", HiddenClass, !showBack);
+        hud.SetHasClassForPlayer(player, "admin_prev", DisabledClass, !hasPrev);
+        hud.SetHasClassForPlayer(player, "admin_next", DisabledClass, !hasNext);
         hud.SetDialogVariableStringForPlayer(
             player,
-            "ca_page",
-            "ca_page",
+            "admin_page",
+            "admin_page",
             $"Page {state.Page + 1} / {pageCount}");
     }
 
@@ -376,16 +373,24 @@ internal static class AdminMenu
 
         switch (buttonId)
         {
-            case "ca_close":
+            case "admin_close":
                 Close(player);
                 return;
-            case "ca_prev":
-                if (state.Page <= 0)
+            case "admin_prev":
+                if (state.Page > 0)
+                {
+                    state.Page--;
+                    Render(player, _hud);
                     return;
-                state.Page--;
+                }
+
+                if (!CanGoBack(state))
+                    return;
+
+                GoBack(player, state);
                 Render(player, _hud);
                 return;
-            case "ca_next":
+            case "admin_next":
             {
                 var count = GetStepCount(state);
                 var pageCount = Math.Max(1, (count + RowsPerPage - 1) / RowsPerPage);
@@ -395,14 +400,10 @@ internal static class AdminMenu
                 Render(player, _hud);
                 return;
             }
-            case "ca_back":
-                GoBack(player, state);
-                Render(player, _hud);
-                return;
         }
 
-        if (!buttonId.StartsWith("ca_row", StringComparison.Ordinal) ||
-            !int.TryParse(buttonId.AsSpan(6), out var row) ||
+        if (!buttonId.StartsWith("admin_row", StringComparison.Ordinal) ||
+            !int.TryParse(buttonId.AsSpan(9), out var row) ||
             row < 0 || row >= RowsPerPage)
             return;
 
@@ -519,6 +520,9 @@ internal static class AdminMenu
         Step.Durations => GetDurations(state).Count,
         _ => GetReasons(state).Count,
     };
+
+    private static bool CanGoBack(MenuState state)
+        => state.Step != Step.Actions && (state.FromHub || state.Step != Step.Players);
 
     private static void GoBack(CCSPlayerController player, MenuState state)
     {

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HexiumCS-Admin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d0480f22c0234f953a030943c91d92bd6d342612")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+709c84d3f3b308a5cfed91c2ca5da8f4433ebd37")]
 [assembly: System.Reflection.AssemblyProductAttribute("HexiumCS-Admin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HexiumCS-Admin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

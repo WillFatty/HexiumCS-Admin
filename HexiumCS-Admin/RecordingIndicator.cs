@@ -137,6 +137,8 @@ internal static class RecordingIndicator
             try
             {
                 hud?.SetHasClassForPlayer(player, RootPanelId, ShowClass, show);
+                if (show)
+                    TeamChrome.Apply(hud!, player, RootPanelId);
             }
             catch
             {
